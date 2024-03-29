@@ -32,6 +32,12 @@ def logout_view(request):
 def profile(request):
     return render(request, 'user/profile.html')
 
+def check(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard-index')
+    else:
+        return redirect('user-login')
+
 
 def profile_update(request):
     if request.method=="POST":
