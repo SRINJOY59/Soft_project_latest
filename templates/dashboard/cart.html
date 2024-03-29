@@ -28,13 +28,13 @@
                         <td>{% widthratio item.product.selling_price 1 item.order_quantity %}
                         </td>
                         <td>
-                            <a href="#" class="btn btn-danger">Remove</a>
+                            <a href="{% url 'remove_from_cart' item.product.id %}" class="btn btn-danger">Remove</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-            <a href="#" class="btn btn-danger">Clear Cart</a>
+            <a href="{% url 'clear_cart' %}" class="btn btn-danger">Clear Cart</a>
             <a href="{% url 'checkout' %}" class="btn btn-primary">Checkout</a>
             {% else %}
             {% comment %} A warning that the cart is empty in bootstrap add a padding {% endcomment %}

@@ -29,7 +29,8 @@ def index(request):
             cur_orders.append(order)
             cur_products.add(order.product)
 
-    in_cart = Order.objects.filter(status='IN_PROGRESS').count()
+    in_cart = Order.objects.filter(status='IN_PROGRESS', staff=request.user).count()
+    print(Order.objects.filter(status='IN_PROGRESS', staff=request.user))
 
     # Calculate daily selling prices
     cur_daily_selling_prices = []
@@ -128,6 +129,17 @@ def billing(request):
         'bill_number': bill_number,
     }
     return render(request, 'dashboard/billing.html', context)
+
+@login_required
+def remove_from_cart(request, product_id):
+    
+    Order.objects.filter(product_id=product_id, staff=request.user).delete()
+    return redirect('cart')
+@login_required
+def clear_cart(request):
+    
+    Order.objects.filter(staff=request.user,status='IN_PROGRESS').delete()
+    return redirect('cart')
 
 @login_required
 def staff(request):
