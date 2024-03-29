@@ -1,0 +1,43 @@
+{% extends 'partials/base.html'%}
+{% block title %} Order Page {% endblock %}
+
+{% block content %}
+{% if user.is_authenticated and user.is_staff and user.is_superuser %}
+{% include 'partials/topnav.html' %}
+<!--Table-->
+<div class="container">
+    <div class="row my-4">
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-8">
+            <table class="table bg-white">
+                <thead class="bg-info">
+                    <tr class="text-white">
+                        <th scope="col">Product</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Order by</th>
+                        <th scope="col">Ordered On</th>
+                        <th scope="col">Status</th>
+                        <!-- Added Actions column -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %} <!-- Changed variable name to 'order' -->
+                    <tr>
+                        
+                        <td>{{ order.product.name }}</td>
+                        <td>{{ order.product.category }}</td>
+                        <td>{{ order.order_quantity }}</td>
+                        <td>{{ order.staff.username }}</td>
+                        <td>{{ order.date }}</td>
+                        <td>{{ order.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
