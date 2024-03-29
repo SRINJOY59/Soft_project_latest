@@ -25,7 +25,12 @@ class OrderUpdateForm(forms.ModelForm):
         model=Order
         fields = ['status']
         
-class ProductEditForm(forms.ModelForm):
+class ProductEditFormStaff(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['quantity','selling_price']
+        fields = ['quantity']
+
+class ProductEditFormAdmin(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['selling_price']

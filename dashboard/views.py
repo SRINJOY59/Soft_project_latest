@@ -2,23 +2,25 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .models import Product, Order, Information
-from .forms import ProductForm, OrderForm, InformationForm, ProductEditForm, OrderUpdateForm
+from .forms import ProductForm, OrderForm, InformationForm, ProductEditFormStaff, ProductEditFormAdmin, OrderUpdateForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime
 from random import randint
+import barcode
+from barcode.writer import ImageWriter
 
 # Create your views here.
 
 @login_required
 def index(request):
-    orders = Order.objects.all()
+    orders = Order.objects.filter(status='COMPLETED')
     products = Product.objects.all()
     workers_count = User.objects.all().count()
-    orders_count = Order.objects.count()
+    orders_count = orders.count()
     products_count = Product.objects.count()
     information = Information.objects.first()  # Assuming there's only one instance
-    information_content = information.content if information else ""  # Retrieve th
+    information_content = information.content if information else ""
     # Filter out orders with order_quantity not equal to zero
     cur_orders = []
     cur_products = set()  # Track unique products
@@ -26,6 +28,8 @@ def index(request):
         if order.product not in cur_products:
             cur_orders.append(order)
             cur_products.add(order.product)
+
+    in_cart = Order.objects.filter(status='IN_PROGRESS').count()
 
     # Calculate daily selling prices
     cur_daily_selling_prices = []
@@ -37,28 +41,11 @@ def index(request):
     # Calculate profit
     profits = [(order.product.selling_price - order.product.buying_price) * order.order_quantity for order in orders]
 
-    if request.method == 'POST':
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.staff = request.user
-            product = Product.objects.get(id=form.data['product'])
-            if int(form.data['order_quantity']) > product.quantity:
-                messages.error(request, 'Order quantity exceeds available stock')
-            else:
-                # Change product quantity
-                product.quantity -= int(form.data['order_quantity'])
-                product.ordered_quantity += int(form.data['order_quantity'])
-                product.save()
-                instance.save()
-                messages.success(request, 'Order has been placed successfully')
-        else:
-            form = OrderForm()
-    else:
-        form = OrderForm()
+    form = OrderForm()
 
     context = {
         'orders': orders,
+        'in_cart': in_cart,
         'cur_orders': cur_orders,
         'form': form,
         'products': products,
@@ -73,13 +60,40 @@ def index(request):
 
     return render(request, 'dashboard/index.html', context)
 
+@login_required
+def add_to_cart(request):
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.staff = request.user
+            product = Product.objects.get(id=form.data['product'])
+            order = Order.objects.filter(product=product, status='IN_PROGRESS', staff=request.user).first()
+            if int(form.data['order_quantity']) > product.quantity:
+                messages.error(request, 'Order quantity exceeds available stock')
+            elif order:
+                order.order_quantity += int(form.data['order_quantity'])
+                product.quantity -= int(form.data['order_quantity'])
+                product.save()
+                order.save()
+                messages.success(request, 'Added to cart successfully')
+            else:
+                product.quantity -= int(form.data['order_quantity'])
+                product.save()
+                instance.save()
+                messages.success(request, 'Added to cart successfully')                
+    return redirect('dashboard-index')
+
+@login_required
 def cart(request):
     cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user) 
     context = {
         'cart_orders': cart_orders,
+        'cart': cart_orders.count(),
     }
     return render(request, 'dashboard/cart.html', context)
 
+@login_required
 def checkout(request):
     cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user)
     total_price = sum([order.product.selling_price * order.order_quantity for order in cart_orders])
@@ -88,16 +102,25 @@ def checkout(request):
     }
     return render(request, 'dashboard/checkout.html', context)
 
+@login_required
 def billing(request):
     cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user)
     total_price = sum([order.product.selling_price * order.order_quantity for order in cart_orders])
     for order in cart_orders:
         order.status = 'COMPLETED'
+        product = order.product
+        product.ordered_quantity += order.order_quantity
+        product.save()
         order.save()
-    
+
     # use system date and a random number as bill number
     bill_number = f'{datetime.now().strftime("%Y%m%d%H%M%S")}{randint(1000, 9999)}'
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    barcode_format = 'code128'
+    barcode_class = barcode.get_barcode_class(barcode_format)
+    barcode_image = barcode_class(bill_number, writer=ImageWriter())
+    barcode_image.save('media/barcode/barcode', options={'module_width': 0.5, 'module_height': 15.0, 'font_size': 10})
+
     context = {
         'cart_orders': cart_orders,
         'total_price': total_price,
@@ -109,6 +132,7 @@ def billing(request):
 @login_required
 def staff(request):
     workers=User.objects.all()
+    info = Information.objects.first() if Information.objects.exists() else ""
     workers_count=workers.count()
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
@@ -117,13 +141,16 @@ def staff(request):
         'workers_count':workers_count,
         'orders_count':orders_count,
         'products_count':products_count,
+        'information_content': info,
     }
     return render(request, 'dashboard/staff.html',context)
 
 @login_required
 def staff_detail(request, pk):
     workers=User.objects.get(id=pk)
+    info = Information.objects.first() if Information.objects.exists() else ""
     context={
+        'information_content': info,
         'workers':workers
     }
     return render(request, 'dashboard/staff_detail.html',context)
@@ -132,6 +159,7 @@ def staff_detail(request, pk):
 def product(request):
     #items=Product.objects.all()
     items=Product.objects.raw('SELECT * FROM dashboard_product')
+    info = Information.objects.first() if Information.objects.exists() else ""
     workers_count=User.objects.all().count()
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
@@ -145,6 +173,7 @@ def product(request):
     else:
         form=ProductForm()    
     context={
+        'information_content': info,
         'items':items,
         'form':form,
         'workers_count':workers_count,
@@ -168,9 +197,11 @@ def product_delete(request, pk):
 def order(request):
     orders=Order.objects.all()
     workers_count=User.objects.all().count()
+    info = Information.objects.first() if Information.objects.exists() else ""
     orders_count=orders.count()
     products_count=Product.objects.count()
     context={
+        'information_content': info,
         'orders':orders,
         'workers_count':workers_count,
         'orders_count':orders_count,
@@ -218,19 +249,32 @@ def edit_information(request):
 
 @login_required
 def product_update(request, pk):
-    item=Product.objects.get(id=pk)
-    if request.method=='POST':
-        form=ProductEditForm(request.POST, instance=item)
-        if form.is_valid():
-
-            form.save()
-            return redirect('dashboard-product')
+    if request.user.is_superuser:
+        item=Product.objects.get(id=pk)
+        if request.method=='POST':
+            form=ProductEditFormAdmin(request.POST, instance=item)
+            if form.is_valid():
+                form.save()
+                return redirect('dashboard-product')
+        else:
+            form=ProductEditFormAdmin(instance=item)
+        context={
+            'form':form
+        }
+        return render(request, 'dashboard/product_update.html', context)
     else:
-        form=ProductEditForm(instance=item)
-    context={
-        'form':form
-    }
-    return render(request, 'dashboard/product_update.html', context)
+        item=Product.objects.get(id=pk)
+        if request.method=='POST':
+            form=ProductEditFormStaff(request.POST, instance=item)
+            if form.is_valid():
+                form.save()
+                return redirect('dashboard-product')
+        else:
+            form=ProductEditFormStaff(instance=item)
+        context={
+            'form':form
+        }
+        return render(request, 'dashboard/product_update.html', context)
 
 @login_required
 def order_update(request, pk):
