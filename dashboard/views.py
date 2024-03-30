@@ -132,13 +132,23 @@ def billing(request):
 
 @login_required
 def remove_from_cart(request, product_id):
-    
-    Order.objects.filter(product_id=product_id, staff=request.user).delete()
+    order = Order.objects.filter(product_id=product_id, staff=request.user, status='IN_PROGRESS')
+    if order.exists():
+        order = order.first()
+        product = Product.objects.get(id=product_id)
+        product.quantity += order.order_quantity
+        product.save()
+        order.delete()
     return redirect('cart')
+
 @login_required
 def clear_cart(request):
-    
-    Order.objects.filter(staff=request.user,status='IN_PROGRESS').delete()
+    order = Order.objects.filter(staff=request.user,status='IN_PROGRESS')
+    for item in order:
+        product = Product.objects.get(id=item.product.id)
+        product.quantity += item.order_quantity
+        product.save()
+        item.delete()
     return redirect('cart')
 
 @login_required
@@ -220,9 +230,6 @@ def order(request):
         'products_count':products_count,
     }
     return render(request, 'dashboard/order.html',context)
-
-
-
 
 @login_required
 def sales_statistics(request):
