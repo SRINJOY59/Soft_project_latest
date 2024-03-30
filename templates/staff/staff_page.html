@@ -1,72 +1,70 @@
-{% load crispy_forms_tags %}
-{% block content %}
-
+{% load crispy_forms_tags %} {% block content %}
 
 <!--Table-->
 <div class="container">
-    <div class="card my-5">
-        <div class="card-header bg-info text-white">
-            Information for Staffs
-        </div>
-        <div class="card-body">
-            <marquee behavior="" direction="">
-                <h3 class="my-4">{{ information_content }}</h3>
-                </marquee>
-                
-        </div>
+  <div class="card my-5">
+    <div class="card-header bg-primary text-white">Information for Staffs</div>
+    <div class="card-body">
+      <marquee behavior="" direction="">
+        <h3 class="my-4">{{ information_content }}</h3>
+      </marquee>
     </div>
-    <div class="row my-4">
-        <div class="col-md-4">
-            {% for message in messages %}
-            {% if message %}
-            <div class="alert alert-{{message.tags}}">
-                {{message}}
-            </div>
-            {% endif %}
-            {% endfor %}
-            <div class="border bg-white p-3">
-                <h4>Add Products</h4>
-                <hr>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ forms|crispy }}
-                    <input class="btn btn-success btn-block" type="submit" value="Add Product">
-
-                </form>
-            </div>
-        </div>
-        <div class="col-md-8">
-            <table class="table bg-white">
-                <thead class="bg-info">
-                    <tr class="text-white">
-                        
-                        <th scope="col">Name</th>
-                        <th scope="col">Category</th>
-                        <th scope="col">Quantity</th>
-                        <th scope="col">Buying Price</th>
-                        <th scope="col">Selling Price</th>
-                        <th scope="col">Activity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {%for item in items  %}
-                    <tr>
-                        
-                        <td>{{ item.name }}</td>
-                        <td>{{item.category}}</td>
-                        <td>{{item.quantity}}</td>
-                        <td>{{item.buying_price}}</td>
-                        <td>{{item.selling_price}}</td>
-                        <td>
-                            <a class="btn btn-info btn-sm" href="{% url 'staff-product-update' item.id %}">Edit</a>
-                            <a class="btn btn-danger btn-sm" href="{% url 'staff-product-delete' item.id %}">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  </div>
+  <div class="row my-4">
+    <div class="col-md-4">
+      {% for message in messages %} {% if message %}
+      <div class="alert alert-{{message.tags}}">{{message}}</div>
+      {% endif %} {% endfor %}
+      <div class="border bg-white p-3">
+        <h4>Add Products</h4>
+        <hr />
+        <form method="POST">
+          {% csrf_token %} {{ forms|crispy }}
+          <input
+            class="btn btn-success btn-block"
+            type="submit"
+            value="Add Product"
+          />
+        </form>
+      </div>
     </div>
-
+    <div class="col-md-8">
+      <table class="table bg-white">
+        <thead class="bg-primary">
+          <tr class="text-white">
+            <th scope="col">Name</th>
+            <th scope="col">Category</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Buying Price</th>
+            <th scope="col">Selling Price</th>
+            <th scope="col">Activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{item.category}}</td>
+            <td>{{item.quantity}}</td>
+            <td>{{item.buying_price}}</td>
+            <td>{{item.selling_price}}</td>
+            <td>
+              <a
+                class="btn btn-primary btn-sm"
+                href="{% url 'staff-product-update' item.id %}"
+                >Edit</a
+              >
+              <a
+                class="btn btn-danger btn-sm"
+                href="{% url 'staff-product-delete' item.id %}"
+                >Delete</a
+              >
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 {% endblock %}

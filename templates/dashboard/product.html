@@ -1,69 +1,70 @@
-
-{% extends 'partials/base.html' %}
-
-{% block title %}Product Page{% endblock %}
-{% load crispy_forms_tags %}
-{% block content %}
-{%if user.is_authenticated and user.is_staff and user.is_superuser %}
-{% include 'partials/topnav.html' %}
-{% endif %}
+{% extends 'partials/base.html' %} {% block title %}Product Page{% endblock %}
+{% load crispy_forms_tags %} {% block content %} {%if user.is_authenticated and
+user.is_staff and user.is_superuser %} {% include 'partials/topnav.html' %} {%
+endif %}
 <div class="container-fluid">
-    <div class="row my-4 ">
-        <!-- Messages & Product Form Column -->
-        <div class="col-md-4 ">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} mt-2">
-                {{ message }}
-            </div>
-            {% endfor %}
-            
-            {% if user.is_authenticated and not user.is_superuser %}
-            <div class="border bg-light p-3 shadow-sm">
-                <h4>Add Products</h4>
-                <hr>
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <input class="btn btn-primary btn-block mt-3" type="submit" value="Add Product">
-                </form>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Product Table Column -->
-        <div class="col-md-8">
-            <div class="table-responsive">
-                <table class="table table-hover bg-white shadow-sm w-100">
-                    <thead class="bg-primary text-white">
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Category</th>
-                            <th scope="col">Quantity</th>
-                            <th scope="col">Buying Price</th>
-                            <th scope="col">Selling Price</th>
-                            <th scope="col">Activity</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                        <tr>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.category }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.buying_price }}</td>
-                            <td>{{ item.selling_price }}</td>
-                            <td>
-                                <a class="btn btn-info btn-sm" href="{% url 'dashboard-product-update' item.id %}">Edit</a>
-                                <a class="btn btn-danger btn-sm" href="{% url 'dashboard-product-delete' item.id %}">Delete</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>        
+  <div class="row my-4">
+    <!-- Messages & Product Form Column -->
+    <div class="col-md-4">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} mt-2">{{ message }}</div>
+      {% endfor %} {% if user.is_authenticated and not user.is_superuser %}
+      <div class="border bg-light p-3 shadow-sm">
+        <h4>Add Products</h4>
+        <hr />
+        <form method="POST">
+          {% csrf_token %} {{ form|crispy }}
+          <input
+            class="btn btn-primary btn-block mt-3"
+            type="submit"
+            value="Add Product"
+          />
+        </form>
+      </div>
+      {% endif %}
     </div>
+
+    <!-- Product Table Column -->
+    <div class="col-md-8">
+      <div class="table-responsive">
+        <table class="table table-hover bg-white shadow-sm w-100">
+          <thead class="bg-primary text-white">
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Category</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Buying Price</th>
+              <th scope="col">Selling Price</th>
+              <th scope="col">Activity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ item.category }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.buying_price }}</td>
+              <td>{{ item.selling_price }}</td>
+              <td>
+                <a
+                  class="btn btn-primary btn-sm"
+                  href="{% url 'dashboard-product-update' item.id %}"
+                  >Edit</a
+                >
+                <a
+                  class="btn btn-danger btn-sm"
+                  href="{% url 'dashboard-product-delete' item.id %}"
+                  >Delete</a
+                >
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
-
