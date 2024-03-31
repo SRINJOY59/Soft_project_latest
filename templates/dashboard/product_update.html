@@ -1,5 +1,6 @@
-{% extends 'partials/base.html' %} {% block title %} Edit Item {% endblock %}
-{%block content %} {% load crispy_forms_tags %}
+{% extends 'partials/base.html' %} {% block title %} Edit Item {% endblock %} 
+{%block content %} 
+{% load crispy_forms_tags %}
 
 <div class="container">
   <div class="row my-4">
@@ -9,9 +10,7 @@
         <hr />
         <form method="POST">
           {% csrf_token %} {{form|crispy}}
-          <a class="btn btn-secondary" href="{% url 'dashboard-product' %}"
-            >Cancel</a
-          >
+          <a class="btn btn-secondary" href="{% url 'dashboard-product' %}">Cancel</a>
           <input class="btn btn-primary" type="submit" value="Update" />
         </form>
       </div>
