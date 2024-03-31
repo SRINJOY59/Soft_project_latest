@@ -13,6 +13,11 @@ class Product(models.Model):
     ordered_quantity=models.PositiveIntegerField(null=True, default=0)
     buying_price = models.PositiveIntegerField(null = True)
     selling_price = models.PositiveIntegerField(null = True)
+    total_selling_price = models.PositiveIntegerField(default=0, null=True)
+    profit = models.PositiveIntegerField(default=0, null = True)
+    barcode = models.ImageField(upload_to='product_barcode', null=True)
+    weight = models.PositiveIntegerField(null=True)
+
     class Meta:
         verbose_name_plural='Product'
     

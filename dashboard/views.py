@@ -22,39 +22,24 @@ def index(request):
     information = Information.objects.first()  # Assuming there's only one instance
     information_content = information.content if information else ""
     # Filter out orders with order_quantity not equal to zero
-    cur_orders = []
-    cur_products = set()  # Track unique products
-    for order in orders:
-        if order.product not in cur_products:
-            cur_orders.append(order)
-            cur_products.add(order.product)
+
+    total_selling_prices = [product.total_selling_price for product in products]
+    profits = [product.profit for product in products]
 
     in_cart = Order.objects.filter(status='IN_PROGRESS', staff=request.user).count()
-    print(Order.objects.filter(status='IN_PROGRESS', staff=request.user))
-
-    # Calculate daily selling prices
-    cur_daily_selling_prices = []
-    for order in cur_orders:
-        daily_selling_price = order.product.selling_price * order.product.ordered_quantity
-        if daily_selling_price != 0:  # Exclude zero selling prices
-            cur_daily_selling_prices.append(daily_selling_price)
-
-    # Calculate profit
-    profits = [(order.product.selling_price - order.product.buying_price) * order.order_quantity for order in orders]
 
     form = OrderForm()
 
     context = {
         'orders': orders,
         'in_cart': in_cart,
-        'cur_orders': cur_orders,
         'form': form,
         'products': products,
         'workers_count': workers_count,
         'orders_count': orders_count,
         'products_count': products_count,
        # 'daily_selling_prices': daily_selling_prices,
-        'cur_daily_selling_prices': cur_daily_selling_prices,
+        'total_selling_prices': total_selling_prices,
         'profits': profits,
         'information_content': information_content,
     }
@@ -75,11 +60,15 @@ def add_to_cart(request):
             elif order:
                 order.order_quantity += int(form.data['order_quantity'])
                 product.quantity -= int(form.data['order_quantity'])
+                product.total_selling_price += product.selling_price * int(form.data['order_quantity'])
+                product.profit += (product.selling_price - product.buying_price) * int(form.data['order_quantity'])
                 product.save()
                 order.save()
                 messages.success(request, 'Added to cart successfully')
             else:
                 product.quantity -= int(form.data['order_quantity'])
+                product.total_selling_price += product.selling_price * int(form.data['order_quantity'])
+                product.profit += (product.selling_price - product.buying_price) * int(form.data['order_quantity'])
                 product.save()
                 instance.save()
                 messages.success(request, 'Added to cart successfully')                
@@ -170,10 +159,16 @@ def staff(request):
 @login_required
 def staff_detail(request, pk):
     workers=User.objects.get(id=pk)
+    workers_count=User.objects.count()
+    orders_count=Order.objects.count()
+    products_count=Product.objects.count()
     info = Information.objects.first() if Information.objects.exists() else ""
     context={
         'information_content': info,
-        'workers':workers
+        'workers':workers,
+        'workers_count':workers_count,
+        'orders_count':orders_count,
+        'products_count':products_count,
     }
     return render(request, 'dashboard/staff_detail.html',context)
 
