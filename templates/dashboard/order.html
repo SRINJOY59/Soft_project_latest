@@ -1,6 +1,7 @@
-{% extends 'partials/base.html'%} {% block title %} Order Page {% endblock %} {%
-block content %} {% if user.is_authenticated and user.is_staff and
-user.is_superuser %} {% include 'partials/topnav.html' %}
+{% extends 'partials/base.html'%} {% block title %} Order Page {% endblock %} 
+
+{% block content %} 
+{% if user.is_authenticated and user.is_staff and user.is_superuser %} {% include 'partials/topnav.html' %}
 <!--Table-->
 <div class="container">
   <div class="row my-4">
@@ -35,4 +36,5 @@ user.is_superuser %} {% include 'partials/topnav.html' %}
     </div>
   </div>
 </div>
-{% endif %} {% endblock %}
+{% endif %} 
+{% endblock %}

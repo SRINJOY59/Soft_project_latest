@@ -13,6 +13,7 @@ class Product(models.Model):
     ordered_quantity=models.PositiveIntegerField(null=True, default=0)
     buying_price = models.PositiveIntegerField(null = True)
     selling_price = models.PositiveIntegerField(null = True)
+    weight=models.FloatField(null=True)
     class Meta:
         verbose_name_plural='Product'
     

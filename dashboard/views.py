@@ -8,6 +8,9 @@ from django.contrib import messages
 from datetime import datetime
 from random import randint
 import barcode
+from django.shortcuts import render
+from barcode.writer import ImageWriter
+from io import BytesIO
 from barcode.writer import ImageWriter
 
 # Create your views here.
@@ -107,6 +110,7 @@ def checkout(request):
 def billing(request):
     cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user)
     total_price = sum([order.product.selling_price * order.order_quantity for order in cart_orders])
+    total_weight = sum([item.product.weight * item.order_quantity for item in cart_orders])
     for order in cart_orders:
         order.status = 'COMPLETED'
         product = order.product
@@ -119,6 +123,7 @@ def billing(request):
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     barcode_format = 'code128'
     barcode_class = barcode.get_barcode_class(barcode_format)
+    
     barcode_image = barcode_class(bill_number, writer=ImageWriter())
     barcode_image.save('media/barcode/barcode', options={'module_width': 0.5, 'module_height': 15.0, 'font_size': 10})
 
@@ -127,6 +132,7 @@ def billing(request):
         'total_price': total_price,
         'date': date,
         'bill_number': bill_number,
+       'total_weight':total_weight,
     }
     return render(request, 'dashboard/billing.html', context)
 
@@ -185,6 +191,8 @@ def product(request):
     workers_count=User.objects.all().count()
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
+    
+    
     if request.method=='POST':
         form=ProductForm(request.POST)
         if form.is_valid():
@@ -294,6 +302,14 @@ def product_update(request, pk):
             'form':form
         }
         return render(request, 'dashboard/product_update.html', context)
+    
+def generate_barcode(data):
+    # Generate barcode image
+    barcode_image = BytesIO()
+    barcode.generate('code128', data, writer=ImageWriter(), output=barcode_image)
+    return barcode_image.getvalue()
+
+
 
 @login_required
 def order_update(request, pk):
