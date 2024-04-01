@@ -29,6 +29,8 @@ class Order(models.Model):
     
     STATUS_CHOICES = [
         ('IN_PROGRESS', 'In Progress'),
+        ('WAITING', 'Waiting'),
+        ('ACCEPTED', 'Accepted'),
         ('COMPLETED', 'Completed'),
     ]
 

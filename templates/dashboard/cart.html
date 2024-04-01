@@ -35,7 +35,7 @@
                 </tbody>
             </table>
             <a href="{% url 'clear_cart' %}" class="btn btn-danger">Clear Cart</a>
-            <a href="{% url 'checkout' %}" class="btn btn-primary">Checkout</a>
+            <a href="{% url 'to-counter' %}" class="btn btn-primary">Take to Counter</a>
             {% else %}
             {% comment %} A warning that the cart is empty in bootstrap add a padding {% endcomment %}
             <div class="alert alert-warning mt-5" role="alert">

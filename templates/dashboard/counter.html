@@ -1,0 +1,52 @@
+{% extends 'partials/base.html'%}
+{% block title %} Counter {% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+    <div class="container">
+        {%if counter_orders %}
+          <p
+            class="text-center text-info text-bold mt-4 mb-4 bg-light p-2 border border-info rounded shadow-sm"
+          >
+            You have {{ counter_orders }} items pending with the sales-clerk for approval.
+            Wait till the sales-clerk approves your order.
+          </p>
+        {% endif %}
+        {% if accepted_orders %}
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Orders</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in accepted_orders %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.order_quantity }}</td>
+                            <td>{{ item.product.selling_price }}</td>
+                            <td>{% widthratio item.product.selling_price 1 item.order_quantity %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <a href="{% url 'checkout' %}" class="btn btn-primary">Checkout</a>
+    </div>
+    {% else %}
+    <div class="container">
+        <p class="text-center text-info text-bold mt-4 mb-4 bg-light p-2 border border-info rounded shadow-sm">
+            You have no approved items in the counter. Please add items to the counter or wait for the sales-clerk to approve your order.
+        </p>
+    </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Product, Order
 from django.contrib.auth.models import Group
 # Register your models here.
-admin.site.site_header = "Agniv's Inventory Dashboard"
+admin.site.site_header = "Agniv's Supermarket Dashboard"
 
 class ProductAdmin(admin.ModelAdmin):
     list_display=('name','category','quantity', 'buying_price', 'selling_price')

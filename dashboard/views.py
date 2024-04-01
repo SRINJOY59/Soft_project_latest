@@ -7,11 +7,13 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime
 from random import randint
-import barcode
 from django.shortcuts import render
+import barcode
 from barcode.writer import ImageWriter
 from io import BytesIO
-from barcode.writer import ImageWriter
+import os
+from pyzbar.pyzbar import decode
+import cv2
 
 # Create your views here.
 
@@ -19,7 +21,8 @@ from barcode.writer import ImageWriter
 def index(request):
     orders = Order.objects.filter(status='COMPLETED')
     products = Product.objects.all()
-    workers_count = User.objects.all().count()
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
+    workers_count=workers.count()
     orders_count = orders.count()
     products_count = Product.objects.count()
     information = Information.objects.first()  # Assuming there's only one instance
@@ -87,20 +90,67 @@ def cart(request):
     return render(request, 'dashboard/cart.html', context)
 
 @login_required
-def checkout(request):
+def to_counter(request):
     cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user)
-    total_price = sum([order.product.selling_price * order.order_quantity for order in cart_orders])
+    for order in cart_orders:
+        order.status = 'WAITING'
+        order.save()
+
+    counter_orders = Order.objects.filter(status='WAITING').count()
+    accepted_orders = Order.objects.filter(status='ACCEPTED')
+    context = {
+        'counter_orders': counter_orders,
+        'accepted_orders': accepted_orders,
+    }
+    return render(request, 'dashboard/counter.html', context)
+
+@login_required
+def counter(request):
+    counter_orders = Order.objects.filter(status='WAITING').count()
+    accepted_orders = Order.objects.filter(status='ACCEPTED')
+    context = {
+        'counter_orders': counter_orders,
+        'accepted_orders': accepted_orders,
+    }
+    return render(request, 'dashboard/counter.html', context)
+
+def barcode_reader(barcode_image):
+    # Read barcode image
+    barcode_image = 'media/' + str(barcode_image)
+    image = cv2.imread(barcode_image)
+    barcode_data = decode(image)
+    if barcode_data:
+        return int(barcode_data[0].data.decode())
+    return None
+
+def automated_weighing_machine(orders):
+    total_price = 0
+    total_weight = 0
+
+    for order in orders:
+        barcode_image = order.product.barcode
+        product_id = barcode_reader(barcode_image)
+        product = Product.objects.get(id=product_id)
+        total_price += product.selling_price * order.order_quantity
+        total_weight += product.weight * order.order_quantity
+
+    return total_price, total_weight
+
+@login_required
+def checkout(request):
+    accepted_orders = Order.objects.filter(status='ACCEPTED', staff=request.user)
+    total_price, total_weight = automated_weighing_machine(accepted_orders)
     context = {
         'total_price': total_price,
+        'total_weight': total_weight,
     }
     return render(request, 'dashboard/checkout.html', context)
 
 @login_required
 def billing(request):
-    cart_orders = Order.objects.filter(status='IN_PROGRESS', staff=request.user)
-    total_price = sum([order.product.selling_price * order.order_quantity for order in cart_orders])
-    total_weight = sum([item.product.weight * item.order_quantity for item in cart_orders])
-    for order in cart_orders:
+    accepted_orders = Order.objects.filter(status='ACCEPTED', staff=request.user)
+    total_price, total_weight = automated_weighing_machine(accepted_orders)
+    for order in accepted_orders:
         order.status = 'COMPLETED'
         product = order.product
         product.ordered_quantity += order.order_quantity
@@ -117,11 +167,11 @@ def billing(request):
     barcode_image.save('media/barcode/barcode', options={'module_width': 0.5, 'module_height': 15.0, 'font_size': 10})
 
     context = {
-        'cart_orders': cart_orders,
+        'cart_orders': accepted_orders,
         'total_price': total_price,
         'date': date,
         'bill_number': bill_number,
-       'total_weight':total_weight,
+        'total_weight':total_weight,
     }
     return render(request, 'dashboard/billing.html', context)
 
@@ -148,9 +198,9 @@ def clear_cart(request):
 
 @login_required
 def staff(request):
-    workers=User.objects.all()
-    info = Information.objects.first() if Information.objects.exists() else ""
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
     workers_count=workers.count()
+    info = Information.objects.first() if Information.objects.exists() else ""
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
     context={
@@ -164,8 +214,8 @@ def staff(request):
 
 @login_required
 def staff_detail(request, pk):
-    workers=User.objects.get(id=pk)
-    workers_count=User.objects.count()
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
+    workers_count=workers.count()
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
     info = Information.objects.first() if Information.objects.exists() else ""
@@ -180,23 +230,32 @@ def staff_detail(request, pk):
 
 @login_required
 def product(request):
-    #items=Product.objects.all()
-    items=Product.objects.raw('SELECT * FROM dashboard_product')
+    items=Product.objects.all()
     info = Information.objects.first() if Information.objects.exists() else ""
-    workers_count=User.objects.all().count()
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
+    workers_count=workers.count()
     orders_count=Order.objects.count()
     products_count=Product.objects.count()
-    
     
     if request.method=='POST':
         form=ProductForm(request.POST)
         if form.is_valid():
             form.save()
             product_name=form.cleaned_data.get('name')
+
+            product_new = Product.objects.get(name=product_name)
+            barcode_format = 'code128'
+            barcode_class = barcode.get_barcode_class(barcode_format)
+            product_id = str(product_new.id)
+            barcode_image = barcode_class(product_id, writer=ImageWriter())
+            barcode_image.save(f'media/product_barcode/{product_id}', options={'module_width': 0.5, 'module_height': 15.0, 'font_size': 10})
+            product_new.barcode = f'product_barcode/{product_id}.png'
+            product_new.save()
+
             messages.success(request, f'{product_name} has been added successfully')
             return redirect('dashboard-product')
-    else:
-        form=ProductForm()    
+    form=ProductForm()
+
     context={
         'information_content': info,
         'items':items,
@@ -211,6 +270,7 @@ def product(request):
 def product_delete(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
+        os.remove(item.barcode.path)
         item.delete()
         return redirect('dashboard-product')
     context={
@@ -221,7 +281,8 @@ def product_delete(request, pk):
 @login_required
 def order(request):
     orders=Order.objects.all()
-    workers_count=User.objects.all().count()
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
+    workers_count=workers.count()
     info = Information.objects.first() if Information.objects.exists() else ""
     orders_count=orders.count()
     products_count=Product.objects.count()

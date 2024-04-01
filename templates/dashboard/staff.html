@@ -11,6 +11,7 @@
           <tr class="text-white">
             <th scope="col">#</th>
             <th scope="col">Name</th>
+            <th scope="col">Designation</th>
             <th scope="col">Email</th>
             <th scope="col">Phone</th>
           </tr>
@@ -19,13 +20,22 @@
           {% for worker in workers %}
           <tr>
             <th scope="row">
+              {% if not worker.is_active %}
+                <a
+                class="btn btn-primary btn-sm"
+                href="{% url 'staff-activate' worker.id %}"
+                >Approve</a
+                >
+              {% else %}
               <a
                 class="btn btn-primary btn-sm"
                 href="{% url 'dashboard-staff-detail' worker.id %}"
                 >View</a
               >
+              {% endif %}
             </th>
             <td>{{ worker.username }}</td>
+            <td>{% if worker.is_active %} Sales-Clerk {% else %} Pending Approval {% endif %}</td>
             <td>{{ worker.email }}</td>
             <td>{{ worker.profile.phone }}</td>
           </tr>

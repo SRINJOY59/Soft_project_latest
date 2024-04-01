@@ -192,19 +192,10 @@ labels: [{% for product in products %} '{{ product.name }}' ,{% endfor %}],
 </div>
 <!--End Graphs-->
 {% elif user.is_staff %}
-
 <script>
     window.location.href = "{% url 'dashboard-product' %}";
 </script>
-
-
 {% else %}
-
-
-
-{% comment %} {% block content %} {% endcomment %}
-
-
 {% include 'dashboard/staff_index.html'%}
 {% endif %}
 {% endblock %}
