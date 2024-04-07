@@ -196,6 +196,6 @@ labels: [{% for product in products %} '{{ product.name }}' ,{% endfor %}],
     window.location.href = "{% url 'dashboard-product' %}";
 </script>
 {% else %}
-{% include 'dashboard/staff_index.html'%}
+{% include 'customer/customer_index.html'%}
 {% endif %}
 {% endblock %}
