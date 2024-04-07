@@ -46,6 +46,8 @@ def staff_register(request):
     helper.add_input(Submit('submit', 'Sign Up', css_class='btn-primary'))
 
     return render(request, 'staff/staff_application.html', {'form': form, 'helper': helper})
+    
+    
 
 
 def activate(request, pk):
@@ -116,21 +118,22 @@ def product(request):
         'items':items,
         'forms':form,
         'products_count':products_count,
-        'information_content': information_content
+        'information_content': information_content,
     }
     return render(request, 'staff/staff_page.html', context)
-
+        
 @login_required
 def product_delete(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
-        os.remove(item.barcode)
+        item.barcode.delete()
         item.delete()
         return redirect('staff-product')
     context={
         'item':item
     }
     return render(request, 'staff/staff_delete.html', context)
+    
 
 @login_required
 def product_update(request, pk):
