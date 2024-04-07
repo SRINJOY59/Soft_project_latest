@@ -17,7 +17,7 @@ class TestForms(TestCase):
         form = CreateUserForm(data={})
         
         self.assertFalse(form.is_valid())
-        self.assertEquals(len(form.errors), 4)  
+        self.assertEqual(len(form.errors), 4)  
     
     def test_user_update_form_valid_data(self):
         form = UserUpdateForm(data={
