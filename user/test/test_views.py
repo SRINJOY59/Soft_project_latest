@@ -15,7 +15,7 @@ class TestViews(TestCase):
 
     def test_register_view_GET(self):
         response = self.client.get(self.register_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'user/register.html')
 
     def test_register_view_POST(self):
@@ -25,24 +25,24 @@ class TestViews(TestCase):
             'password1': '123@Srinjoy',
             'password2': '123@Srinjoy'
         })
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('user-login'))
 
     def test_logout_view(self):
         response = self.client.get(self.logout_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'user/logout.html')
 
     def test_profile_view(self):
         self.client.login(username='testuser', password='testpassword')
         response = self.client.get(self.profile_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'user/profile.html')
 
     def test_profile_update_view_GET(self):
         self.client.login(username='testuser', password='testpassword')
         response = self.client.get(self.profile_update_url)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'user/profile_update.html')
 
     def test_profile_update_view_POST(self):
@@ -53,5 +53,5 @@ class TestViews(TestCase):
             'address': '123 Updated St',
             'phone': '1234567890',
         })
-        self.assertEquals(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('user-profile'))

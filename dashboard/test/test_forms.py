@@ -18,7 +18,7 @@ class TestForms(TestCase):
         form = ProductForm(data={})
 
         self.assertFalse(form.is_valid())
-        self.assertEquals(len(form.errors), 6)  # 6 fields in the form
+        self.assertEqual(len(form.errors), 6)  # 6 fields in the form
 
 
     def test_information_form_valid_data(self):

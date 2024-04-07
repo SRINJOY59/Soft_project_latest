@@ -325,7 +325,7 @@ def product_update(request, pk):
         context={
             'form':form
         }
-        return render(request, 'dashboard/product_update.html', context)
+        return render(request, 'manager/product_update.html', context)
     
 def generate_barcode(data):
     # Generate barcode image

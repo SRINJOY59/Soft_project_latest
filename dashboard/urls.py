@@ -18,6 +18,6 @@ urlpatterns=[
     path('counter/', views.counter, name='counter'),
     path('checkout/', views.checkout, name='checkout'),
     path('billing/', views.billing, name='billing'),
-     path('remove/<int:product_id>/', remove_from_cart, name='remove_from_cart'),
+    path('remove/<int:product_id>/', remove_from_cart, name='remove_from_cart'),
     path('clear/', clear_cart, name='clear_cart'),
 ]

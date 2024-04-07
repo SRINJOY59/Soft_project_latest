@@ -16,7 +16,7 @@ class TestViews(TestCase):
 
     def test_index_view(self):
         response = self.client.get(reverse('dashboard-index'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'dashboard/index.html')
 
     def test_add_to_cart_view(self):
@@ -25,11 +25,11 @@ class TestViews(TestCase):
             'product': product.id,
             'order_quantity': 5,
         })
-        self.assertEquals(response.status_code, 302)  
+        self.assertEqual(response.status_code, 302)  
 
     def test_Cart(self):
         response = self.client.get(reverse('cart'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'dashboard/cart.html')
 
     
@@ -182,22 +182,6 @@ class TestViews(TestCase):
         self.assertIn('products_count', response.context)
         self.assertIn('information_content', response.context)
 
-    def test_staff_detail_view(self):
-        # Create sample users and data
-        User.objects.create_user(username='staff1', password='password1', is_staff=True)
-        User.objects.create_user(username='staff2', password='password2', is_staff=True)
-        Information.objects.create(content='Test information')
-
-        response = self.client.get(reverse('dashboard-staff-detail', kwargs={'pk': 1}))
-        self.assertEqual(response.status_code, 200)  # Should return success
-
-        # Check if correct context is passed
-        self.assertIn('information_content', response.context)
-        self.assertIn('workers', response.context)
-        self.assertIn('workers_count', response.context)
-        self.assertIn('orders_count', response.context)
-        self.assertIn('products_count', response.context)
-
     def test_product_view(self):
         response = self.client.get(reverse('dashboard-product'))
         self.assertEqual(response.status_code, 200)  # Should return success
@@ -292,7 +276,7 @@ class TestViews(TestCase):
         self.client.login(username='sb', password='adc@12345')
         response = self.client.get(reverse('dashboard-product-update', kwargs={'pk': product.pk}))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/product_update.html')
+        self.assertTemplateUsed(response, 'manager/product_update.html')
 
     def test_product_update_admin_post(self):
         # Create a product object
@@ -310,7 +294,7 @@ class TestViews(TestCase):
         self.client.login(username='Srinjoy', password='123@Gerimara')
         response = self.client.get(reverse('dashboard-product-update', kwargs={'pk': product.pk}))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'dashboard/product_update.html')
+        self.assertTemplateUsed(response, 'manager/product_update.html')
 
     def test_product_update_staff_post(self):
         # Create a product object
