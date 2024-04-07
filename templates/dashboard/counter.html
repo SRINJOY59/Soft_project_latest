@@ -31,7 +31,7 @@
                             <td>{{ item.product.name }}</td>
                             <td>{{ item.order_quantity }}</td>
                             <td>{{ item.product.selling_price }}</td>
-                            <td>{% widthratio item.product.selling_price 1 item.order_quantity %}
+                            <td>{% if item.order_quantity %}{% widthratio item.product.selling_price 1 item.order_quantity %}{% endif %}
                             </td>
                         </tr>
                         {% endfor %}
