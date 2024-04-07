@@ -68,6 +68,22 @@ def activate(request, pk):
     return redirect('dashboard-staff')
 
 @login_required
+def staff(request):
+    workers=User.objects.filter(is_superuser=False, is_staff=True)
+    workers_count=workers.count()
+    info = Information.objects.first() if Information.objects.exists() else ""
+    orders_count=Order.objects.count()
+    products_count=Product.objects.count()
+    context={
+        'workers':workers,
+        'workers_count':workers_count,
+        'orders_count':orders_count,
+        'products_count':products_count,
+        'information_content': info,
+    }
+    return render(request, 'staff/staff.html',context)
+
+@login_required
 def logout_view(request):
     logout(request)
     # return redirect('dashboard-index')

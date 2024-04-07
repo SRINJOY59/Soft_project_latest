@@ -197,38 +197,6 @@ def clear_cart(request):
     return redirect('cart')
 
 @login_required
-def staff(request):
-    workers=User.objects.filter(is_superuser=False, is_staff=True)
-    workers_count=workers.count()
-    info = Information.objects.first() if Information.objects.exists() else ""
-    orders_count=Order.objects.count()
-    products_count=Product.objects.count()
-    context={
-        'workers':workers,
-        'workers_count':workers_count,
-        'orders_count':orders_count,
-        'products_count':products_count,
-        'information_content': info,
-    }
-    return render(request, 'dashboard/staff.html',context)
-
-@login_required
-def staff_detail(request, pk):
-    workers=User.objects.filter(is_superuser=False, is_staff=True)
-    workers_count=workers.count()
-    orders_count=Order.objects.count()
-    products_count=Product.objects.count()
-    info = Information.objects.first() if Information.objects.exists() else ""
-    context={
-        'information_content': info,
-        'workers':workers,
-        'workers_count':workers_count,
-        'orders_count':orders_count,
-        'products_count':products_count,
-    }
-    return render(request, 'dashboard/staff_detail.html',context)
-
-@login_required
 def product(request):
     items=Product.objects.all()
     info = Information.objects.first() if Information.objects.exists() else ""
@@ -276,7 +244,7 @@ def product_delete(request, pk):
     context={
         'item':item
     }
-    return render(request, 'dashboard/product_delete.html', context)
+    return render(request, 'manager/product_delete.html', context)
 
 @login_required
 def order(request):
@@ -344,7 +312,7 @@ def product_update(request, pk):
         context={
             'form':form
         }
-        return render(request, 'dashboard/product_update.html', context)
+        return render(request, 'manager/product_update.html', context)
     else:
         item=Product.objects.get(id=pk)
         if request.method=='POST':
