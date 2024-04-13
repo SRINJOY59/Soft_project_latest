@@ -14,6 +14,8 @@ from io import BytesIO
 import os
 from pyzbar.pyzbar import decode
 import cv2
+from django.db.models import Q
+from dashboard.models import CATEGORY
 
 # Create your views here.
 
@@ -182,6 +184,8 @@ def remove_from_cart(request, product_id):
         order = order.first()
         product = Product.objects.get(id=product_id)
         product.quantity += order.order_quantity
+        product.total_selling_price -= product.selling_price * order.order_quantity
+        product.profit -= (product.selling_price - product.buying_price) * order.order_quantity
         product.save()
         order.delete()
     return redirect('cart')
@@ -190,10 +194,12 @@ def remove_from_cart(request, product_id):
 def clear_cart(request):
     order = Order.objects.filter(staff=request.user,status='IN_PROGRESS')
     for item in order:
-        product = Product.objects.get(id=item.product.id)
-        product.quantity += item.order_quantity
+        product = Product.objects.get(id=Product.product.id)
+        product.quantity += Product.order_quantity
+        product.total_selling_price -= product.selling_price * Product.order_quantity
+        product.profit -= (product.selling_price - product.buying_price) * Product.order_quantity
         product.save()
-        item.delete()
+        Product.delete()
     return redirect('cart')
 
 @login_required
@@ -238,8 +244,8 @@ def product(request):
 def product_delete(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
-        os.remove(item.barcode.path)
-        item.delete()
+        os.remove(Product.barcode.path)
+        Product.delete()
         return redirect('dashboard-product')
     context={
         'item':item
@@ -349,3 +355,33 @@ def order_update(request, pk):
         'form':form
     }
     return render(request, 'dashboard/order_update.html', context)
+
+@login_required
+def search_product(request):
+    query = request.GET.get('query', '')
+    category_id = request.GET.get('category', 0)
+    products = Product.objects.filter()
+
+    if category_id:
+        products = Product.objects.filter()
+
+    # CATEGORY=(
+    #     ('Stationary','Stationary'),
+    #     ('Electronics','Electronics'),
+    #     ('Food','Food'),
+    #     ('Clothing','Clothing'),
+    #     ('Furniture','Furniture'),
+    #     ('Others','Others'),
+    # )
+
+    # take only the category name
+    categories = [category[0] for category in CATEGORY]
+
+    if query:
+        products = products.filter(Q(name__icontains=query) |
+                             Q(category__icontains=query))
+    print(products)
+    return render(request, 'user/search_product.html', {'products': products,
+                                                'query': query,
+                                                'categories': categories,
+                                                'category_id': int(category_id)})

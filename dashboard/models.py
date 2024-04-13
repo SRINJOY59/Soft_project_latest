@@ -5,6 +5,9 @@ CATEGORY=(
     ('Stationary','Stationary'),
     ('Electronics','Electronics'),
     ('Food','Food'),
+    ('Clothing','Clothing'),
+    ('Furniture','Furniture'),
+    ('Others','Others'),
 )
 class Product(models.Model):
     name=models.CharField(max_length=100, null=True)
@@ -17,6 +20,7 @@ class Product(models.Model):
     profit = models.PositiveIntegerField(default=0, null = True)
     barcode = models.ImageField(upload_to='product_barcode', null=True)
     weight=models.FloatField(null=True)
+    image=models.ImageField(default='product/default.png',upload_to='product')
     
     class Meta:
         verbose_name_plural='Product'
