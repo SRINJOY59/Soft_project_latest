@@ -349,3 +349,115 @@ def order_update(request, pk):
         'form':form
     }
     return render(request, 'dashboard/order_update.html', context)
+
+
+import sqlite3
+import pandas as pd
+import google.generativeai as genai
+
+# Google API Key setup
+GOOGLE_API_KEY = 'AIzaSyAaiMtEVHVzAtQ-6l2q2-nXTsMGBej0-Qc'  # Replace with your actual key
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel(model_name="gemini-pro")
+
+
+def connect_to_db(db_path):
+  """Connects to the sqlite database."""
+  conn = sqlite3.connect(db_path)
+  return conn
+
+
+def read_data(conn, query):
+  """Reads data from the database using a provided query."""
+  df = pd.read_sql_query(query, conn)
+  return df
+
+
+def close_connection(conn):
+  """Closes the connection to the database."""
+  conn.close()
+
+
+def generate_answer(query):
+  """Prompts the generative model to answer the question."""
+  context = """
+  You are an expert in handling orders and products in a dashboard system! 
+  There are two tables in the SQL database: `dashboard_order` and `dashboard_product`. 
+  Let's explore their attributes:
+
+  For `dashboard_order`:
+  - id
+  - order_quantity
+  - date
+  - status
+  - staff_id
+  - product_id
+
+  For `dashboard_product`:
+  - id
+  - name
+  - category (Electronics, Stationary, Food)
+  - quantity
+  - ordered_quantity
+  - buying_price
+  - selling_price
+  - total_selling_price
+  - profit
+  - barcode
+  - weight
+
+  You're now ready to write SQL queries based on these tables. For example, you could ask:
+
+  - How many products were ordered by a specific customer? (here product means product name)
+  - What is the total price of all products in a certain category?
+  - Which product has the highest quantity?
+
+  Give the SQL query in such a way so that I can just use this query to get the result! don't give any comment or explaination
+  """
+
+  prompt = f"{context}\nQuestion: {query}"
+  response = model.generate_content(prompt)
+  print("answer: ",response.text)
+  return response.text
+
+def read_sql_query(sql, db):
+    conn = sqlite3.connect(db)
+    cur = conn.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    answer = []
+    for row in rows:
+        answer.append(row[0])
+    conn.close()
+    return answer
+
+
+
+
+
+
+
+
+
+def query(request):
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        answer = generate_answer(query)
+        final = ""
+        for i in range(len(answer)):
+            if i >= 6 and i < len(answer)-3:
+                final = final + answer[i]
+                
+        final_answer = read_sql_query(final, "db.sqlite3")
+        print("final_answer: ",final_answer)
+        if len(final_answer)==1:
+            context = {'answer': final_answer[0], 'query': query}
+        elif len(final_answer) > 1:
+            final_answer = ', '.join(final_answer)
+            context = {'answer': final_answer, 'query': query}
+        else:
+            context = {'answer': final_answer, 'query': query}
+        return render(request, 'manager/query.html', context)
+    return render(request, 'manager/query.html')
+   
+

@@ -1,0 +1,30 @@
+{% extends 'partials/base.html'%}
+{% block title %} Query Page {% endblock %} 
+
+{% block content %}
+<div class="container">
+  <div class="row my-4">
+    <div class="col-md-6 offset-md-3">
+      <div class="border bg-white p-3">
+        <h3>Query Database</h3>
+        <hr />
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="query" placeholder="Enter your query here" />
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+        {% if answer %}
+        <div class="mt-4">
+          <h4>Answer:</h4>
+          <p>{{ answer }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
