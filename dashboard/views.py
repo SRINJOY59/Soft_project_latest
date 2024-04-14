@@ -14,6 +14,8 @@ from io import BytesIO
 import os
 from pyzbar.pyzbar import decode
 import cv2
+from django.db.models import Q
+from dashboard.models import CATEGORY
 
 # Create your views here.
 
@@ -182,6 +184,8 @@ def remove_from_cart(request, product_id):
         order = order.first()
         product = Product.objects.get(id=product_id)
         product.quantity += order.order_quantity
+        product.total_selling_price -= product.selling_price * order.order_quantity
+        product.profit -= (product.selling_price - product.buying_price) * order.order_quantity
         product.save()
         order.delete()
     return redirect('cart')
@@ -190,10 +194,12 @@ def remove_from_cart(request, product_id):
 def clear_cart(request):
     order = Order.objects.filter(staff=request.user,status='IN_PROGRESS')
     for item in order:
-        product = Product.objects.get(id=item.product.id)
-        product.quantity += item.order_quantity
+        product = Product.objects.get(id=Product.product.id)
+        product.quantity += Product.order_quantity
+        product.total_selling_price -= product.selling_price * Product.order_quantity
+        product.profit -= (product.selling_price - product.buying_price) * Product.order_quantity
         product.save()
-        item.delete()
+        Product.delete()
     return redirect('cart')
 
 @login_required
@@ -238,8 +244,8 @@ def product(request):
 def product_delete(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
-        os.remove(item.barcode.path)
-        item.delete()
+        os.remove(Product.barcode.path)
+        Product.delete()
         return redirect('dashboard-product')
     context={
         'item':item
@@ -350,114 +356,23 @@ def order_update(request, pk):
     }
     return render(request, 'dashboard/order_update.html', context)
 
+@login_required
+def search_product(request):
+    query = request.GET.get('query', '')
+    category_id = request.GET.get('category', 0)
+    products = Product.objects.filter()
 
-import sqlite3
-import pandas as pd
-import google.generativeai as genai
+    if category_id:
+        products = Product.objects.filter()
 
-# Google API Key setup
-GOOGLE_API_KEY = 'AIzaSyAaiMtEVHVzAtQ-6l2q2-nXTsMGBej0-Qc'  # Replace with your actual key
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel(model_name="gemini-pro")
+    # take only the category name
+    categories = [category[0] for category in CATEGORY]
 
-
-def connect_to_db(db_path):
-  """Connects to the sqlite database."""
-  conn = sqlite3.connect(db_path)
-  return conn
-
-
-def read_data(conn, query):
-  """Reads data from the database using a provided query."""
-  df = pd.read_sql_query(query, conn)
-  return df
-
-
-def close_connection(conn):
-  """Closes the connection to the database."""
-  conn.close()
-
-
-def generate_answer(query):
-  """Prompts the generative model to answer the question."""
-  context = """
-  You are an expert in handling orders and products in a dashboard system! 
-  There are two tables in the SQL database: `dashboard_order` and `dashboard_product`. 
-  Let's explore their attributes:
-
-  For `dashboard_order`:
-  - id
-  - order_quantity
-  - date
-  - status
-  - staff_id
-  - product_id
-
-  For `dashboard_product`:
-  - id
-  - name
-  - category (Electronics, Stationary, Food)
-  - quantity
-  - ordered_quantity
-  - buying_price
-  - selling_price
-  - total_selling_price
-  - profit
-  - barcode
-  - weight
-
-  You're now ready to write SQL queries based on these tables. For example, you could ask:
-
-  - How many products were ordered by a specific customer? (here product means product name)
-  - What is the total price of all products in a certain category?
-  - Which product has the highest quantity?
-
-  Give the SQL query in such a way so that I can just use this query to get the result! don't give any comment or explaination
-  """
-
-  prompt = f"{context}\nQuestion: {query}"
-  response = model.generate_content(prompt)
-  print("answer: ",response.text)
-  return response.text
-
-def read_sql_query(sql, db):
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    answer = []
-    for row in rows:
-        answer.append(row[0])
-    conn.close()
-    return answer
-
-
-
-
-
-
-
-
-
-def query(request):
-    if request.method == 'POST':
-        query = request.POST.get('query')
-        answer = generate_answer(query)
-        final = ""
-        for i in range(len(answer)):
-            if i >= 6 and i < len(answer)-3:
-                final = final + answer[i]
-                
-        final_answer = read_sql_query(final, "db.sqlite3")
-        print("final_answer: ",final_answer)
-        if len(final_answer)==1:
-            context = {'answer': final_answer[0], 'query': query}
-        elif len(final_answer) > 1:
-            final_answer = ', '.join(final_answer)
-            context = {'answer': final_answer, 'query': query}
-        else:
-            context = {'answer': final_answer, 'query': query}
-        return render(request, 'manager/query.html', context)
-    return render(request, 'manager/query.html')
-   
-
+    if query:
+        products = products.filter(Q(name__icontains=query) |
+                             Q(category__icontains=query))
+    print(products)
+    return render(request, 'user/search_product.html', {'products': products,
+                                                'query': query,
+                                                'categories': categories,
+                                                'category_id': int(category_id)})

@@ -1,0 +1,73 @@
+{% extends 'partials/base.html' %} 
+{% block title %}Product |{% endblock %}
+
+{% block content %}
+{% for category in categories %}
+<p>{{category.name}}</p>
+{% endfor %}
+
+{% for product in products %}
+<div class="card" style="width: 18rem;">
+    <img src="{{product.image.url}}" class="card-img-top" alt="{{product.name}}">
+    <div class="card-body">
+        <h5 class="card-title">{{product.name}}</h5>
+        <p class="card-text">${{product.selling_price}}</p>
+    </div>
+</div>
+{% endfor %}
+{% comment %} <div class="container pb-6">
+    <div class="row">
+        <div class="col-md-3">
+            <form method="get" action="{% url 'search_product' %}">
+                <input type="text" name="query" placeholder="Search product" value="{{ query }}"
+                    class="form-control mb-4">
+
+                <button class="btn btn-primary btn-block">Search</button>
+            </form>
+
+            <hr class="my-4">
+
+            <p class="font-weight-bold">Categories</p>
+            <ul class="list-group">
+                {% for category in categories %}
+                <li class="list-group-item {% if category.id == category_id %} active {% endif %}">
+                    <a href="#">{{category.name}}</a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <p class="font-weight-bold mt-4">Clear Filters</p>
+
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="#" class="btn btn-warning btn-lg btn-block">Clear</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="col-md-9">
+            <div class="row">
+                {% for item in product %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <a href="#">
+                            <div>
+                                {% if product.image %}
+                                <img src="{{product.image.url}}" alt="{{product.name}}" class="card-img-top">
+                                {% else %}
+                                <p class="card-text">No image available</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h3 class="card-title font-weight-bold mb-2">{{product.name}}</h3>
+                                <p class="card-text">${{product.selling_price}}</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div> {% endcomment %}
+{% endblock %}
