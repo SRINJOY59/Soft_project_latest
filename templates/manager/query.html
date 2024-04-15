@@ -1,0 +1,43 @@
+{% extends 'partials/base.html' %} {% block title %} Query Page {% endblock %}
+{% block content %}
+<div class="container-lg">
+  <!-- Using 'container-lg' for larger container -->
+  <div class="row my-4">
+    <div class="col-lg-8 offset-lg-2">
+      <!-- Using 'col-lg-8' for larger column -->
+      <div class="border bg-white p-4">
+        <!-- Increased padding -->
+        <h3 class="mb-4">Query Database</h3>
+        <!-- Increased margin bottom -->
+        <hr />
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <!-- Increased margin bottom -->
+            {% if messages %}
+            <!-- Added messages block -->
+            <div class="alert alert-danger">
+              <!-- Added alert-danger class -->
+              {{ messages }}
+            </div>
+            {% endif %}
+            <input
+              type="text"
+              class="form-control"
+              name="query"
+              placeholder="Enter your query here"
+            />
+          </div>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+        {% if answer %}
+        <div class="mt-4">
+          <h4>Answer:</h4>
+          <p>{{ answer }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
