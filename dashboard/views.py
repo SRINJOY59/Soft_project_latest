@@ -14,8 +14,24 @@ from io import BytesIO
 import os
 from pyzbar.pyzbar import decode
 import cv2
+import time
 from django.db.models import Q
 from dashboard.models import CATEGORY
+
+import sqlite3
+import pandas as pd
+import google.generativeai as genai
+from langchain_core.prompts import PromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.chains.question_answering import load_qa_chain
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import warnings
+warnings.filterwarnings("ignore")
+
+
 
 # Create your views here.
 
@@ -376,3 +392,117 @@ def search_product(request):
                                                 'query': query,
                                                 'categories': categories,
                                                 'category_id': int(category_id)})
+
+GOOGLE_API_KEY='AIzaSyAdNgjHTSxPMYh-nZc00HiVJL7pxyUlYMc'
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel(model_name = "gemini-pro")
+
+
+
+
+llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=GOOGLE_API_KEY)
+
+
+def generate_vector_index():
+    conn = sqlite3.connect("db.sqlite3")
+
+
+    query = "SELECT * FROM dashboard_product"
+
+
+    df = pd.read_sql_query(query, conn)
+
+    query1 = "SELECT * FROM dashboard_order"
+
+    df2 = pd.read_sql_query(query1, conn)
+
+    conn.close()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    context = "\n\n".join(str(df.iloc[i]) for i in range(len(df)))
+
+    context1 = "\n\n".join(str(df2.iloc[i]) for i in range(len(df2)))
+
+    texts = text_splitter.split_text(context)
+
+    texts1 = text_splitter.split_text(context1)
+
+    texts = texts + texts1
+    vector_index = Chroma.from_texts(texts, embeddings).as_retriever(search_kwargs={"k":1})
+    return vector_index
+
+
+def generate_answer(query, vector_index):
+  relevant_documents = vector_index.get_relevant_documents(query)
+  prompt_template = """"You are an expert in handling orders and products in a dashboard system! There are two tables in the SQL database: `dashboard_order` and `dashboard_product`. Let's explore their attributes:\n\nFor `dashboard_order`, the attributes are:\nid,\norder_quantity,\ndate,status,\nstaff_id,\nproduct_id\n\nFor `dashboard_product`, the attributes are:\n- id\n,name\n,category\n,quantity\n,ordered_quantity\n,buying_price\n,selling_price\n,total_selling_price\n,profit,barcode\n,weight\n\nYou're now ready to write SQL queries based on these tables. For example, you could ask:\n\n- How many products were ordered by a specific customer?\n- What is the total price of all products in a certain category?\n- Which product has the highest quantity?\n\nFeel free to craft SQL commands based on these tables and their attributes! Just give the SQL Query, nothing more than that, no other comment and stuff, just SQL","
+***If product is asked by the user, it is always product name, not id.***
+***if anything outside the database is asked, then say "This query is not related to Product or Order Database".***
+Context: The user has shared the following information about their situation: {context}.
+
+Question: The user is asking: {question}.
+
+Answer:
+"""
+
+  prompt = PromptTemplate(
+    template=prompt_template, input_variables=["context", "question"]
+)
+
+
+  stuff_chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
+  stuff_answer = stuff_chain(
+    {"input_documents": relevant_documents, "question":query}, return_only_outputs = True
+    )
+  return stuff_answer['output_text']
+
+
+
+
+
+def read_sql_query(sql, db):
+    try:
+        conn = sqlite3.connect(db)
+        cur = conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        answer = []
+        for row in rows:
+            answer.append(row[0])
+        conn.close()
+        return answer
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        return []
+    except Exception as e:
+        print("An error occurred:", e)
+        return []
+
+def query(request):
+    
+    vector_index = generate_vector_index()
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        if not query:
+            return render(request, 'manager/query.html', {'messages': 'Please enter a query'})
+        answer = generate_answer(query, vector_index)
+        final = ""
+        for i in range(len(answer)):
+            if i >= 6 and i < len(answer)-3:
+                final = final + answer[i]
+                
+        final_answer = read_sql_query(final, "db.sqlite3")
+        print("final_answer: ",final_answer)
+
+        if len(final_answer)==1:
+            context = {'answer': final_answer[0], 'query': query}
+        elif len(final_answer) > 1:
+            # convert all elements of the list to string
+            final_answer = [str(ele) for ele in final_answer]
+            final_answer = ', '.join(final_answer)
+            context = {'answer': final_answer, 'query': query}
+        else:
+            context = {'answer': "This question is probably not related to Product or Order database.", 'query': query}
+        # add messages to context
+        context['messages'] = ''
+        return render(request, 'manager/query.html', context)
+    return render(request, 'manager/query.html',{'messages': ''})

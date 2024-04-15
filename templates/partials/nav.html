@@ -31,7 +31,13 @@
             >{{user.username}} Profile <span class="sr-only">(current)</span></a
           >
         </li>
-        {% if not user.is_superuser and not user.is_staff %}
+        {% if user.is_superuser %}
+        <li class="nav-item">
+          <a class="nav-link text-white" href="{% url 'query' %}"
+            >Query Database</a
+          >
+        </li>
+        {% endif %} {% if not user.is_superuser and not user.is_staff %}
         <li class="nav-item">
           <a class="nav-link text-white" href="{% url 'counter' %}">Counter</a>
         </li>
