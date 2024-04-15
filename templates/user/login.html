@@ -48,7 +48,7 @@
           {% csrf_token %} {{ form|crispy }}
           <div class="google-btn-container">
             <a href="{% url 'social:begin' 'google-oauth2' %}?next=/dashboard/" class="google-btn">
-              <i class="login">Google</i> Login With Google
+             Login With Google
             </a>
             <a href="{% url 'password-reset' %}">Forget Password?</a>
           </div>
