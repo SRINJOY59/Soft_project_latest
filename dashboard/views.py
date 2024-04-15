@@ -374,33 +374,21 @@ def order_update(request, pk):
 @login_required
 def search_product(request):
     query = request.GET.get('query', '')
-    category_id = request.GET.get('category', 0)
+    category = request.GET.get('category', "")
     products = Product.objects.filter()
 
-    if category_id:
-        products = Product.objects.filter()
-
-    # CATEGORY=(
-    #     ('Stationary','Stationary'),
-    #     ('Electronics','Electronics'),
-    #     ('Food','Food'),
-    #     ('Clothing','Clothing'),
-    #     ('Furniture','Furniture'),
-    #     ('Others','Others'),
-    # )
+    if category:
+        products = Product.objects.filter(category=category)
 
     # take only the category name
     categories = [category[0] for category in CATEGORY]
-
     if query:
         products = products.filter(Q(name__icontains=query) |
                              Q(category__icontains=query))
-    print(products)
-    return render(request, 'user/search_product.html', {'products': products,
+    return render(request, 'customer/search_product.html', {'products': products,
                                                 'query': query,
                                                 'categories': categories,
-                                                'category_id': int(category_id)})
-
+                                                'category': category})
 
 def get_models():
     with open("dashboard/GOOGLE_API_KEY", "r") as f:
@@ -411,6 +399,7 @@ def get_models():
     llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=GOOGLE_API_KEY)
     return llm, embeddings
+
 
 def generate_vector_index():
     llm, embeddings = get_models()
@@ -503,8 +492,8 @@ def query(request):
             if i >= 6 and i < len(answer)-3:
                 final = final + answer[i]
                 
-        final_answer = read_sql_query(final, "db.sqlite3")
-        print("final_answer: ",final_answer)
+#         final_answer = read_sql_query(final, "db.sqlite3")
+#         print("final_answer: ",final_answer)
 
         if len(final_answer)==1:
             context = {'answer': final_answer[0], 'query': query}

@@ -1,14 +1,12 @@
-{% extends 'partials/base.html' %} {% block title %} Query Page {% endblock %}
+{% extends 'partials/base.html'%}
+{% block title %} Query Page {% endblock %} 
+
 {% block content %}
-<div class="container-lg">
-  <!-- Using 'container-lg' for larger container -->
+<div class="container">
   <div class="row my-4">
-    <div class="col-lg-8 offset-lg-2">
-      <!-- Using 'col-lg-8' for larger column -->
-      <div class="border bg-white p-4">
-        <!-- Increased padding -->
-        <h3 class="mb-4">Query Database</h3>
-        <!-- Increased margin bottom -->
+    <div class="col-md-6 offset-md-3">
+      <div class="border bg-white p-3">
+        <h3>Query Database</h3>
         <hr />
           <form method="POST">
             {% csrf_token %}
@@ -52,3 +50,7 @@
   </div>
 </div>
 {% endblock %}
+
+
+
+
