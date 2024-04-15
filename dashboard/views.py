@@ -17,7 +17,6 @@ import cv2
 import time
 from django.db.models import Q
 from dashboard.models import CATEGORY
-
 import sqlite3
 import pandas as pd
 import google.generativeai as genai
@@ -402,71 +401,65 @@ def search_product(request):
                                                 'categories': categories,
                                                 'category_id': int(category_id)})
 
-GOOGLE_API_KEY='AIzaSyAdNgjHTSxPMYh-nZc00HiVJL7pxyUlYMc'
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel(model_name = "gemini-pro")
 
+def get_models():
+    with open("dashboard/GOOGLE_API_KEY", "r") as f:
+        GOOGLE_API_KEY = f.read().strip()
 
-
-
-llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=GOOGLE_API_KEY)
-
+    genai.configure(api_key=GOOGLE_API_KEY)
+    model = genai.GenerativeModel(model_name = "gemini-pro")
+    llm = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001",google_api_key=GOOGLE_API_KEY)
+    return llm, embeddings
 
 def generate_vector_index():
+    llm, embeddings = get_models()
     conn = sqlite3.connect("db.sqlite3")
-
-
     query = "SELECT * FROM dashboard_product"
-
-
     df = pd.read_sql_query(query, conn)
-
     query1 = "SELECT * FROM dashboard_order"
-
     df2 = pd.read_sql_query(query1, conn)
-
     conn.close()
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     context = "\n\n".join(str(df.iloc[i]) for i in range(len(df)))
-
     context1 = "\n\n".join(str(df2.iloc[i]) for i in range(len(df2)))
-
     texts = text_splitter.split_text(context)
-
     texts1 = text_splitter.split_text(context1)
-
     texts = texts + texts1
     vector_index = Chroma.from_texts(texts, embeddings).as_retriever(search_kwargs={"k":1})
     return vector_index
 
+def update_api_key(request):
+    if request.method == 'POST':
+        api_key = request.POST.get('api_key')
+        with open("dashboard/GOOGLE_API_KEY", "w") as f:
+            f.write(api_key)
+        return redirect('query')
+    return render(request, 'manager/change_api_key.html')
 
 def generate_answer(query, vector_index):
-  relevant_documents = vector_index.get_relevant_documents(query)
-  prompt_template = """"You are an expert in handling orders and products in a dashboard system! There are two tables in the SQL database: `dashboard_order` and `dashboard_product`. Let's explore their attributes:\n\nFor `dashboard_order`, the attributes are:\nid,\norder_quantity,\ndate,status,\nstaff_id,\nproduct_id\n\nFor `dashboard_product`, the attributes are:\n- id\n,name\n,category\n,quantity\n,ordered_quantity\n,buying_price\n,selling_price\n,total_selling_price\n,profit,barcode\n,weight\n\nYou're now ready to write SQL queries based on these tables. For example, you could ask:\n\n- How many products were ordered by a specific customer?\n- What is the total price of all products in a certain category?\n- Which product has the highest quantity?\n\nFeel free to craft SQL commands based on these tables and their attributes! Just give the SQL Query, nothing more than that, no other comment and stuff, just SQL","
-***If product is asked by the user, it is always product name, not id.***
-***if anything outside the database is asked, then say "This query is not related to Product or Order Database".***
-Context: The user has shared the following information about their situation: {context}.
+    llm, embeddings = get_models()
+    relevant_documents = vector_index.get_relevant_documents(query)
+    prompt_template = """"You are an expert in handling orders and products in a dashboard system! There are two tables in the SQL database: `dashboard_order` and `dashboard_product`. Let's explore their attributes:\n\nFor `dashboard_order`, the attributes are:\nid,\norder_quantity,\ndate,status,\nstaff_id,\nproduct_id\n\nFor `dashboard_product`, the attributes are:\n- id\n,name\n,category\n,quantity\n,ordered_quantity\n,buying_price\n,selling_price\n,total_selling_price\n,profit,barcode\n,weight\n\nYou're now ready to write SQL queries based on these tables. For example, you could ask:\n\n- How many products were ordered by a specific customer?\n- What is the total price of all products in a certain category?\n- Which product has the highest quantity?\n\nFeel free to craft SQL commands based on these tables and their attributes! Just give the SQL Query, nothing more than that, no other comment and stuff, just SQL","
+    ***If product is asked by the user, it is always product name, not id.***
+    ***if anything outside the database is asked, then say "This query is not related to Product or Order Database".***
+    Context: The user has shared the following information about their situation: {context}.
 
-Question: The user is asking: {question}.
+    Question: The user is asking: {question}.
 
-Answer:
-"""
+    Answer:
+    """
 
-  prompt = PromptTemplate(
-    template=prompt_template, input_variables=["context", "question"]
-)
-
-
-  stuff_chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
-  stuff_answer = stuff_chain(
-    {"input_documents": relevant_documents, "question":query}, return_only_outputs = True
+    prompt = PromptTemplate(
+        template=prompt_template, input_variables=["context", "question"]
     )
-  return stuff_answer['output_text']
 
 
-
-
+    stuff_chain = load_qa_chain(llm, chain_type="stuff", prompt=prompt)
+    stuff_answer = stuff_chain(
+        {"input_documents": relevant_documents, "question":query}, return_only_outputs = True
+        )
+    return stuff_answer['output_text']
 
 def read_sql_query(sql, db):
     try:
@@ -485,15 +478,26 @@ def read_sql_query(sql, db):
     except Exception as e:
         print("An error occurred:", e)
         return []
+    
+
 
 def query(request):
-    
+    context = {}
     vector_index = generate_vector_index()
     if request.method == 'POST':
         query = request.POST.get('query')
         if not query:
             return render(request, 'manager/query.html', {'messages': 'Please enter a query'})
-        answer = generate_answer(query, vector_index)
+        try:
+            answer = generate_answer(query, vector_index)
+        except Exception as e:
+            # Check for API key limit exceeded error (adapt based on your API library)
+            if "limit" in str(e) and ("API" in str(e) or "quota" in str(e)):
+                return redirect('change_api_key')
+            else:
+                context['messages'] = "An error occurred. Please try again."
+                return render(request, 'manager/query.html', context)
+
         final = ""
         for i in range(len(answer)):
             if i >= 6 and i < len(answer)-3:
@@ -513,5 +517,6 @@ def query(request):
             context = {'answer': "This question is probably not related to Product or Order database.", 'query': query}
         # add messages to context
         context['messages'] = ''
+        context['query'] = query
         return render(request, 'manager/query.html', context)
     return render(request, 'manager/query.html',{'messages': ''})

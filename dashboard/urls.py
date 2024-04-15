@@ -22,4 +22,5 @@ urlpatterns=[
     path('clear/', clear_cart, name='clear_cart'),
     path('search/', views.search_product, name='search_product'),
     path('query/', views.query, name='query'),
+    path('change_api_key/', views.update_api_key, name='change_api_key'),
 ]

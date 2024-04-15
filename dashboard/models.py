@@ -11,6 +11,7 @@ CATEGORY=(
 )
 class Product(models.Model):
     name=models.CharField(max_length=100, null=True)
+    description=models.TextField(null=True, default='')
     category=models.CharField(max_length=20, choices=CATEGORY, null=True)
     quantity=models.PositiveIntegerField(null=True)
     ordered_quantity=models.PositiveIntegerField(null=True, default=0)
