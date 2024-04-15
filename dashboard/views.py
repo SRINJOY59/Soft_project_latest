@@ -372,7 +372,7 @@ def search_product(request):
         products = products.filter(Q(name__icontains=query) |
                              Q(category__icontains=query))
     print(products)
-    return render(request, 'user/search_product.html', {'products': products,
+    return render(request, 'customer/search_product.html', {'products': products,
                                                 'query': query,
                                                 'categories': categories,
                                                 'category_id': int(category_id)})

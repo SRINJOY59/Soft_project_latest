@@ -1,21 +1,8 @@
 {% extends 'partials/base.html' %} 
-{% block title %}Product |{% endblock %}
+{% block title %}Search Product Page{% endblock %}
 
 {% block content %}
-{% for category in categories %}
-<p>{{category.name}}</p>
-{% endfor %}
-
-{% for product in products %}
-<div class="card" style="width: 18rem;">
-    <img src="{{product.image.url}}" class="card-img-top" alt="{{product.name}}">
-    <div class="card-body">
-        <h5 class="card-title">{{product.name}}</h5>
-        <p class="card-text">${{product.selling_price}}</p>
-    </div>
-</div>
-{% endfor %}
-{% comment %} <div class="container pb-6">
+<div class="container pb-6">
     <div class="row">
         <div class="col-md-3">
             <form method="get" action="{% url 'search_product' %}">
@@ -69,5 +56,5 @@
             </div>
         </div>
     </div>
-</div> {% endcomment %}
+</div>
 {% endblock %}
