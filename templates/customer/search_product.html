@@ -2,59 +2,70 @@
 {% block title %}Search Product Page{% endblock %}
 
 {% block content %}
-<div class="container pb-6">
-    <div class="row">
-        <div class="col-md-3">
-            <form method="get" action="{% url 'search_product' %}">
-                <input type="text" name="query" placeholder="Search product" value="{{ query }}"
-                    class="form-control mb-4">
+<div class="container mt-4"> <!-- Add margin-top to create a gap -->
+  <div class="row">
+    <div class="col-md-3">
+      <div class="border bg-white p-3">
+        <h3>Search Products</h3>
+        <hr />
+        <form method="get" action="{% url 'search_product' %}">
+            <input type="text" name="query" placeholder="Search product" value="{{ query }}" class="form-control mb-4">
+            <button class="btn btn-primary btn-block">Search</button>
+        </form>
 
-                <button class="btn btn-primary btn-block">Search</button>
-            </form>
+        <hr class="my-4">
 
-            <hr class="my-4">
-
-            <p class="font-weight-bold">Categories</p>
-            <ul class="list-group">
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for category in categories %}
-                <li class="list-group-item {% if category.id == category_id %} active {% endif %}">
-                    <a href="#">{{category.name}}</a>
-                </li>
+                <tr>
+                    <td>
+                       <a href="{% url 'search_product' %}?query={{ query }}&category={{ category }}">{{ category }}</a>
+                    </td>
+                </tr>
                 {% endfor %}
-            </ul>
+            </tbody>
+        </table>
 
-            <p class="font-weight-bold mt-4">Clear Filters</p>
+        <p class="font-weight-bold mt-4">Clear Filters</p>
 
-            <ul class="list-group">
-                <li class="list-group-item">
-                    <a href="#" class="btn btn-warning btn-lg btn-block">Clear</a>
-                </li>
-            </ul>
-        </div>
-
-        <div class="col-md-9">
-            <div class="row">
-                {% for item in product %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <a href="#">
-                            <div>
-                                {% if product.image %}
-                                <img src="{{product.image.url}}" alt="{{product.name}}" class="card-img-top">
-                                {% else %}
-                                <p class="card-text">No image available</p>
-                                {% endif %}
-                            </div>
-                            <div class="card-body">
-                                <h3 class="card-title font-weight-bold mb-2">{{product.name}}</h3>
-                                <p class="card-text">${{product.selling_price}}</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+        <ul class="list-group">
+            <li class="list-group-item">
+                <a href="{% url 'search_product' %}" class="btn btn-warning btn-lg btn-block">Clear</a>
+            </li>
+        </ul>
+      </div>
     </div>
+
+    <div class="col-md-9">
+      <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+          <div class="card">
+            <a href="{% url 'product_details' product.id %}">
+              <div>
+                {% if product.image %}
+                <img src="{{product.image.url}}" alt="{{product.name}}" height="200" class="card-img-top">
+                {% else %}
+                <p class="card-text">No image available</p>
+                {% endif %}
+              </div>
+              <div class="card-body">
+                <h3 class="card-title font-weight-bold mb-2">{{product.name}}</h3>
+                <p class="card-text">${{product.selling_price}}</p>
+              </div>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

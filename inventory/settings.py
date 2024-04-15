@@ -41,7 +41,14 @@ INSTALLED_APPS = [
     'user.apps.UserConfig',
     'crispy_forms',
     "crispy_bootstrap4",
+    'social_django', 
+    'inventory',
     'staff',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.google.GoogleOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_django.middleware.SocialAuthExceptionMiddleware' 
+
 ]
 
 ROOT_URLCONF = 'inventory.urls'
@@ -67,6 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
             ],
         },
     },
@@ -144,3 +154,8 @@ EMAIL_HOST_USER='agnivasaha10@gmail.com'
 EMAIL_HOST_PASSWORD='nbythstrzomfnbdc'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY='357561199840-ami1usrr2pmssdd3vqbl4avonlgamuo0.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'http://127.0.0.1:8000/social-auth/complete/google-oauth2/'

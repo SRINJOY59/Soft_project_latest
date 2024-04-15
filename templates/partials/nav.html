@@ -31,13 +31,17 @@
             >{{user.username}} Profile <span class="sr-only">(current)</span></a
           >
         </li>
-        {% if user.is_superuser %}
+        {% comment %} {% if user.is_superuser %}
         <li class="nav-item">
           <a class="nav-link text-white" href="{% url 'query' %}"
             >Query Database</a
           >
+        </li> {% endcomment %}
+        {% comment %} {% endif %}  {% endcomment %}
+        <li class="nav-item">
+          <a class="nav-link text-white" href="{% url 'search_product' %}">Search product</a>
         </li>
-        {% endif %} {% if not user.is_superuser and not user.is_staff %}
+        {% if not user.is_superuser and not user.is_staff %}
         <li class="nav-item">
           <a class="nav-link text-white" href="{% url 'counter' %}">Counter</a>
         </li>
