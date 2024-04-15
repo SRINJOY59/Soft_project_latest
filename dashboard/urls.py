@@ -21,6 +21,7 @@ urlpatterns=[
     path('remove/<int:product_id>/', remove_from_cart, name='remove_from_cart'),
     path('clear/', clear_cart, name='clear_cart'),
     path('search/', views.search_product, name='search_product'),
-    # path('query/', views.query, name='query'),
+    path('query/', views.query, name='query'),
+    path('change_api_key/', views.update_api_key, name='change_api_key'),
     path('product-details/<int:pk>/', views.product_details, name='product_details'),
 ]
