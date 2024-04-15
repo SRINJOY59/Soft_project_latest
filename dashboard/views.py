@@ -401,7 +401,6 @@ def product_details(request, pk):
     }
     return render(request, 'dashboard/product_details.html', context)    
 
-# GOOGLE_API_KEY='AIzaSyAdNgjHTSxPMYh-nZc00HiVJL7pxyUlYMc'
 # genai.configure(api_key=GOOGLE_API_KEY)
 # model = genai.GenerativeModel(model_name = "gemini-pro")
 
