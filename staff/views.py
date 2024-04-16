@@ -62,7 +62,7 @@ def activate(request, pk):
         message,
         settings.EMAIL_HOST_USER,
         [user.email],
-        fail_silently=False,
+        fail_silently=True,
     )
     messages.success(request, f'{user.username} has been activated')
     return redirect('dashboard-staff')
