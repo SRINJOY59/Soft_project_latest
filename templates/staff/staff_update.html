@@ -7,8 +7,8 @@
         <h3>Edit Item</h3>
         <hr />
 
-        <form method="POST">
-          {% csrf_token %} {{ form|crispy }}
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %} {{ forms|crispy }}
           <a class="btn btn-secondary" href="{% url 'staff-product' %}"
             >Cancel</a
           >

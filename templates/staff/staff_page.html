@@ -20,9 +20,10 @@
         <h4>Add Products</h4>
         <hr />
         <form method="POST">
-          {% csrf_token %} {{ forms|crispy }}
+          {% csrf_token %}
+          {{ forms|crispy }}
           <input
-            class="btn btn-success btn-block"
+            class="btn btn-success"
             type="submit"
             value="Add Product"
           />

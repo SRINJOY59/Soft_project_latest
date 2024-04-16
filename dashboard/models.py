@@ -21,7 +21,7 @@ class Product(models.Model):
     profit = models.PositiveIntegerField(default=0, null = True)
     barcode = models.ImageField(upload_to='product_barcode', null=True)
     weight=models.FloatField(null=True)
-    image=models.ImageField(default='product/default.png',upload_to='product')
+    image=models.ImageField(default='product_images/default.png',upload_to='product_images')
     
     class Meta:
         verbose_name_plural='Product'

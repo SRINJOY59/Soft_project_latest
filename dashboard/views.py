@@ -28,6 +28,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import warnings
+from fuzzywuzzy import fuzz
 warnings.filterwarnings("ignore")
 
 
@@ -61,7 +62,6 @@ def index(request):
         'workers_count': workers_count,
         'orders_count': orders_count,
         'products_count': products_count,
-       # 'daily_selling_prices': daily_selling_prices,
         'total_selling_prices': total_selling_prices,
         'profits': profits,
         'information_content': information_content,
@@ -214,7 +214,6 @@ def clear_cart(request):
         product.total_selling_price -= product.selling_price * Product.order_quantity
         product.profit -= (product.selling_price - product.buying_price) * Product.order_quantity
         product.save()
-        Product.delete()
     return redirect('cart')
 
 @login_required
@@ -259,8 +258,8 @@ def product(request):
 def product_delete(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
-        os.remove(Product.barcode.path)
-        Product.delete()
+        os.remove(item.barcode.path)
+        item.delete()
         return redirect('dashboard-product')
     context={
         'item':item
@@ -324,7 +323,7 @@ def product_update(request, pk):
     if request.user.is_superuser:
         item=Product.objects.get(id=pk)
         if request.method=='POST':
-            form=ProductEditFormAdmin(request.POST, instance=item)
+            form=ProductEditFormAdmin(request.POST, request.FILES, instance=item)
             if form.is_valid():
                 form.save()
                 return redirect('dashboard-product')
@@ -383,8 +382,11 @@ def search_product(request):
     # take only the category name
     categories = [category[0] for category in CATEGORY]
     if query:
-        products = products.filter(Q(name__icontains=query) |
-                             Q(category__icontains=query))
+        # products = products.filter(Q(name__icontains=query) |
+        #                      Q(category__icontains=query))
+        products = products.filter(Q(name__icontains=query) | Q(category__icontains=query) | Q(name__icontains=query, category__icontains=query))
+
+        
     return render(request, 'customer/search_product.html', {'products': products,
                                                 'query': query,
                                                 'categories': categories,
@@ -492,8 +494,8 @@ def query(request):
             if i >= 6 and i < len(answer)-3:
                 final = final + answer[i]
                 
-#         final_answer = read_sql_query(final, "db.sqlite3")
-#         print("final_answer: ",final_answer)
+        final_answer = read_sql_query(final, "db.sqlite3")
+        # print("final_answer: ",final_answer)
 
         if len(final_answer)==1:
             context = {'answer': final_answer[0], 'query': query}
@@ -509,3 +511,10 @@ def query(request):
         context['query'] = query
         return render(request, 'manager/query.html', context)
     return render(request, 'manager/query.html',{'messages': ''})
+
+def product_details(request, pk):
+    product = Product.objects.get(id=pk)
+    context = {
+        'product': product,
+    }
+    return render(request, 'dashboard/product_details.html', context)

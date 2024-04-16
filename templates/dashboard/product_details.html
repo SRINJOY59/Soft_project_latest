@@ -2,14 +2,10 @@
 {% extends 'partials/base.html'%}
 {% block title %} Product Details Page {% endblock %}
 {% block content %}
-{% if user.is_authenticated  %}
-{% include 'partials/topnav.html' %}
-{%endif%}
 <div class="container">
     <div class="row justify-content-center my-4">
         
         <div class="col-md-8">
-            {% comment %} don't show the product details in table we are showing one product details show only the product's details{% endcomment %}
             <div class="border bg-white p-3">
                 <h3 class="text-center">Product Details</h3>
                 <hr />
@@ -19,12 +15,13 @@
                     </div>
                     <div class="col-md-6">
                         <h4>{{ product.name }}</h4>
-                        <p>{{ product.description }}</p>
-                        <p>Price: <span class="text-danger">&#x20B9;{{ product.selling_price }}</span></p>
-                        <p>Category: {{ product.category }}</p>
-                        <p>Quantity: {{ product.quantity }}</p>
-                        <p>Weight: {{ product.weight }}</p>
-                        {% comment %}add tw buttons if the user is staff and superuser to update and delete for manager refer to product_update and product_delete and for staff use staff_update and staff_delete{% endcomment %}
+                        <p><strong>Description: </strong>{{ product.description }}</p>
+                        <p><strong>Price: </strong><span class="text-danger">&#x20B9;{{ product.selling_price }}</span></p>
+                        <p><strong>Category </strong>{{ product.category }}</p>
+                        {%if user.is_staff and user.is_superuser %}
+                            <p><strong>Quantity: </strong>{{ product.quantity }}</p>
+                        {%endif%}
+                        <p><strong>Weight: </strong>{{ product.weight }}g</p>
                         {% if user.is_staff and user.is_superuser %}
                         <a href="{% url 'dashboard-product-update' product.id %}" class="btn btn-primary">Update</a>
                         <a href="{% url 'dashboard-product-delete' product.id %}" class="btn btn-danger">Delete</a>

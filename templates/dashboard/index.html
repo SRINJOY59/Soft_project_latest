@@ -17,7 +17,7 @@
                         data: {
                             labels: [{% for product in products %} '{{product.name}}' ,{% endfor %}],
                             datasets: [{
-                                label: 'Orders',
+                                label: 'Products Sold',
                                 data: [{% for product in products %}'{{ product.ordered_quantity}}',{% endfor %}],
                                 backgroundColor: [
                                     'rgba(255, 99, 132, 1)',
@@ -67,7 +67,7 @@
                         data: {
                             labels: [{% for product in products %}'{{ product.name }}',{% endfor%}],
                             datasets: [{
-                                label: 'Products',
+                                label: 'Products in Stock',
                                 data: [{% for product in products %}'{{ product.quantity}}',{% endfor %}],
                                 backgroundColor: [
                                     'rgba(255, 99, 132, 1)',

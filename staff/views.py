@@ -139,7 +139,7 @@ def product_delete(request, pk):
 def product_update(request, pk):
     item=Product.objects.get(id=pk)
     if request.method=='POST':
-        form=ProductEditFormStaff(request.POST, instance=item)
+        form=ProductEditFormStaff(request.POST, request.FILES, instance=item)
         if form.is_valid():
             form.save()
             return redirect('staff-product')
